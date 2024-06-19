@@ -110,6 +110,10 @@ func TestHandlers_UpdateBlueprint(t *testing.T) {
 	err = json.Unmarshal([]byte(resp), &jsonResp)
 	require.NoError(t, err)
 	require.Equal(t, "Invalid blueprint name", jsonResp.Errors[0].Title)
+
+	body["name"] = "Changing to correct body"
+	respStatusCodeNotFound, _ := tutils.PutResponseBody(t, fmt.Sprintf("http://localhost:8086/api/image-builder/v1/experimental/blueprints/%s", uuid.New()), body)
+	require.Equal(t, http.StatusNotFound, respStatusCodeNotFound)
 }
 
 func TestHandlers_ComposeBlueprint(t *testing.T) {
@@ -295,6 +299,14 @@ func TestHandlers_GetBlueprintComposes(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, blueprintId, *result.Data[0].BlueprintId)
 	require.Equal(t, 2, *result.Data[0].BlueprintVersion)
+
+	//// get composes for non-existing blueprint
+	respStatusCode, body = tutils.GetResponseBody(t, fmt.Sprintf("http://localhost:8086/api/image-builder/v1/experimental/blueprints/%s/composes?blueprint_version=1", uuid.New().String()), &tutils.AuthString0)
+	require.Equal(t, 200, respStatusCode)
+	err = json.Unmarshal([]byte(body), &result)
+	require.NoError(t, err)
+	require.Equal(t, 0, len(result.Data))
+	require.Equal(t, 0, result.Meta.Count)
 }
 
 func TestHandlers_GetBlueprint(t *testing.T) {
@@ -366,6 +378,9 @@ func TestHandlers_GetBlueprint(t *testing.T) {
 	require.Equal(t, blueprint.ImageRequests, result.ImageRequests)
 	require.Equal(t, blueprint.Distribution, result.Distribution)
 	require.Equal(t, blueprint.Customizations, result.Customizations)
+
+	respStatusCodeNotFound, _ := tutils.GetResponseBody(t, fmt.Sprintf("http://localhost:8086/api/image-builder/v1/experimental/blueprints/%s", uuid.New()), &tutils.AuthString0)
+	require.Equal(t, http.StatusNotFound, respStatusCodeNotFound)
 }
 
 func TestHandlers_GetBlueprints(t *testing.T) {
@@ -428,11 +443,13 @@ func TestHandlers_DeleteBlueprint(t *testing.T) {
 	}()
 	defer tokenSrv.Close()
 
-	err = dbase.InsertBlueprint(ctx, blueprintId, versionId, "000000", "000000", "blueprint", "blueprint desc", json.RawMessage(`{"image_requests": [{"image_type": "aws"}]}`))
+	blueprintName := "blueprint"
+	err = dbase.InsertBlueprint(ctx, blueprintId, versionId, "000000", "000000", blueprintName, "blueprint desc", json.RawMessage(`{"image_requests": [{"image_type": "aws"}]}`))
 	require.NoError(t, err)
 	id1 := uuid.New()
 	err = dbase.InsertCompose(ctx, id1, "000000", "user100000@test.test", "000000", &imageName, json.RawMessage(`{"image_requests": [{"image_type": "edge-installer"}]}`), &clientId, &versionId)
 	require.NoError(t, err)
+
 	id2 := uuid.New()
 	err = dbase.InsertCompose(ctx, id2, "000000", "user100000@test.test", "000000", &imageName, json.RawMessage(`{"image_requests": [{"image_type": "aws"}]}`), &clientId, &versionId)
 	require.NoError(t, err)
@@ -460,8 +477,25 @@ func TestHandlers_DeleteBlueprint(t *testing.T) {
 	_, err = dbase.GetBlueprint(ctx, blueprintId, "000000")
 	require.ErrorIs(t, err, db.BlueprintNotFoundError)
 
+	// We should not be able to list deleted blueprint
+	var result BlueprintsResponse
+	respStatusCode, body = tutils.GetResponseBody(t, "http://localhost:8086/api/image-builder/v1/experimental/blueprints?name=blueprint", &tutils.AuthString0)
+	require.Equal(t, http.StatusOK, respStatusCode)
+	err = json.Unmarshal([]byte(body), &result)
+	require.NoError(t, err)
+	require.Len(t, result.Data, 0)
+
+	// We should not be able to update deleted blueprint
+	id5 := uuid.New()
+	err = dbase.UpdateBlueprint(ctx, id5, blueprintId, "000000", "newName", "desc2", json.RawMessage(`{"image_requests": [{"image_type": "aws"}, {"image_type": "gcp"}]}`))
+	require.ErrorIs(t, err, db.BlueprintNotFoundError)
+
 	// Composes should not be assigned to the blueprint anymore
 	bpComposes, err := dbase.GetBlueprintComposes(ctx, "000000", blueprintId, nil, (time.Hour * 24 * 14), 10, 0, nil)
 	require.NoError(t, err)
 	require.Len(t, bpComposes, 0)
+
+	// We should be able to create a Blueprint with same name
+	err = dbase.InsertBlueprint(ctx, blueprintId, versionId, "000000", "000000", blueprintName, "blueprint desc", json.RawMessage(`{"image_requests": [{"image_type": "aws"}]}`))
+	require.NoError(t, err)
 }
