@@ -302,7 +302,7 @@ def main():
         ))
 
     for bootc_source in BOOTC_SOURCES:
-        for arch in testlib.bootcsource.BOOTC_ARCHES:
+        for arch in testlib.bootcsource.list_bootc_source_arches(bootc_source):
             runner = testlib.testenv.get_ci_runner_for(distro="*", arch=arch, image_type="*")
             quay_auth_download = ""
             if bootc_source == "rhel-10":

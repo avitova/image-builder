@@ -35,7 +35,13 @@ CAN_BOOT_TEST = {
         "raw", "vmdk",
         "wsl", "generic-wsl",
         "bootc-generic-iso",
-    ]
+        "pxe-tar-xz",
+    ],
+    "aarch64": [
+        "qcow2", "generic-qcow2", "cloud-qcow2",
+        "raw", "vmdk",
+        "pxe-tar-xz",
+    ],
 }
 
 

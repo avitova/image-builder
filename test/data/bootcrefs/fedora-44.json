@@ -6,5 +6,13 @@
       "disk": "quay.io/fedora/fedora-bootc:44",
       "ami": "quay.io/fedora/fedora-bootc:44"
     }
+  },
+  "aarch64": {
+    "ref": "quay.io/fedora/fedora-bootc:44",
+    "default_fs": "ext4",
+    "derived_refs": {
+      "disk": "quay.io/fedora/fedora-bootc:44",
+      "ami": "quay.io/fedora/fedora-bootc:44"
+    }
   }
 }

@@ -58,6 +58,7 @@ def test_export_pipeline_shell_flag():
 def test_bootc_source_from_distro():
     assert testlib.bootcsource.bootc_source_from_distro("bootc-rhel-10.2") == "rhel-10"
     assert testlib.bootcsource.bootc_source_from_distro("bootc-fedora-44") == "fedora-44"
+    assert testlib.bootcsource.bootc_source_from_distro("bootc-centos-10") == "centos-10"
     assert testlib.bootcsource.bootc_source_from_distro("fedora-41") is None
 
 
@@ -65,6 +66,15 @@ def test_resolve_fedora_44_bootc_refs():
     ref = "quay.io/fedora/fedora-bootc:44"
     assert testlib.bootcsource.resolve_bootc_source_ref("fedora-44", "x86_64", "qcow2") == ref
     assert testlib.bootcsource.resolve_bootc_source_ref("fedora-44", "x86_64", "ami") == ref
+
+
+def test_resolve_centos_10_bootc_refs():
+    ref = "quay.io/centos-bootc/centos-bootc:stream10"
+    assert testlib.bootcsource.resolve_bootc_source_ref("centos-10", "x86_64", "qcow2") == ref
+    assert testlib.bootcsource.resolve_bootc_source_ref("centos-10", "aarch64", "ami") == ref
+    assert testlib.bootcsource.bootc_image_types_for_source("centos-10") == [
+        "qcow2", "ami", "raw", "vmdk",
+    ]
 
 
 def test_resolve_rhel_10_bootc_refs():
@@ -130,7 +140,8 @@ def test_config_to_cli_args_bootc_default_fs():
 
 def test_list_bootc_source_arches():
     arches = testlib.bootcsource.list_bootc_source_arches("fedora-44")
-    assert arches == ["x86_64"]
+    assert arches == ["aarch64", "x86_64"]
+    assert testlib.bootcsource.list_bootc_source_arches("centos-10") == ["aarch64", "x86_64"]
 
 
 def test_resolve_bootc_source_rejects_string_entry(tmp_path, monkeypatch):

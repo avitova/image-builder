@@ -10,11 +10,11 @@ INSTALLER_IMAGE_TYPES = {"bootc-generic-iso", "bootc-installer"}
 # we test all image types for fedora-44, but only vhd for rhel-10
 # since we only have bootc-foundry for rhel-10, we only support vhd for rhel-10
 BOOTC_SOURCE_IMAGE_TYPES = {
-    "fedora-44": ["qcow2", "ami", "raw", "vmdk"],
+    "fedora-44": ["qcow2", "ami", "raw", "vmdk", "gce"],
+    "centos-10": ["qcow2", "ami", "raw", "vmdk"],
     "rhel-10": ["vhd"],
 }
 BOOTC_SOURCES = list(BOOTC_SOURCE_IMAGE_TYPES)
-BOOTC_ARCHES = ["x86_64"]
 BOOTC_CONFIGS = {"bootc-user"}
 
 BOOTC_QUAY_AUTH_SECURE_FILE = "quay-auth.json"

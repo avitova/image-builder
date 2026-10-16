@@ -1,0 +1,16 @@
+{
+  "x86_64": {
+    "ref": "quay.io/centos-bootc/centos-bootc:stream10",
+    "derived_refs": {
+      "disk": "quay.io/centos-bootc/centos-bootc:stream10",
+      "ami": "quay.io/centos-bootc/centos-bootc:stream10"
+    }
+  },
+  "aarch64": {
+    "ref": "quay.io/centos-bootc/centos-bootc:stream10",
+    "derived_refs": {
+      "disk": "quay.io/centos-bootc/centos-bootc:stream10",
+      "ami": "quay.io/centos-bootc/centos-bootc:stream10"
+    }
+  }
+}
